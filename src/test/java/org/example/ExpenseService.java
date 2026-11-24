@@ -27,7 +27,7 @@ class ExpenseServiceTest {
 
         List<Expense> all = service.getAllExpenses();
         assertEquals(1, all.size());
-        assertEquals(coffee, all.get(0));
+        assertEquals(coffee, all.getFirst());
     }
 
     @Test
