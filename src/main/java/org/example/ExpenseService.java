@@ -1,10 +1,8 @@
 package org.example;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.UUID;
 
 /// Stores expenses in memory and provides filtering and total calculations.
 public class ExpenseService {
@@ -63,5 +61,29 @@ public class ExpenseService {
                 .filter(e -> e.category() == category)
                 .map(Expense::amount)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+    }
+
+    public boolean updateAmount(UUID id, BigDecimal newAmount) {
+        Objects.requireNonNull(id, "id cannot be null");
+        for (int i = 0; i < expenses.size(); i++){
+            Expense current = expenses.get(i);
+            if (current.id().equals(id)){
+                Expense updated = new Expense(
+                        current.id(),
+                        current.description(),
+                        newAmount,
+                        current.category(),
+                        current.date()
+                );
+                expenses.set(i, updated);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean removeExpense(UUID id){
+        Objects.requireNonNull(id, "id cannot be null");
+        return expenses.removeIf(expense -> expense.id().equals(id));
     }
 }

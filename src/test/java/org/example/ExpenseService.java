@@ -69,4 +69,47 @@ class ExpenseServiceTest {
         assertEquals(new BigDecimal("20.00"), service.totalByCategory(Category.FOOD));
 
     }
+
+    @Test
+    void updateAmountForExistingExpense(){
+        ExpenseService service = new ExpenseService();
+        UUID id = UUID.randomUUID();
+        service.addExpense(new Expense(id, "coffee", new BigDecimal("5.50"), Category.FOOD, LocalDate.now()));
+
+        boolean updated = service.updateAmount(id, new BigDecimal("6.25"));
+
+        assertTrue(updated);
+        assertEquals(new BigDecimal("6.25"), service.getAllExpenses().getFirst().amount());
+        assertEquals(new BigDecimal("6.25"), service.totalAmount());
+
+    }
+
+    @Test
+    void returnFalseWhenUpdatingMissingExpense(){
+        ExpenseService service = new ExpenseService();
+
+        boolean updated = service.updateAmount(UUID.randomUUID(), new BigDecimal("6.25"));
+
+        assertFalse(updated);
+    }
+
+    @Test
+    void removeExistingExpenseById(){
+        ExpenseService service = new ExpenseService();
+        UUID id = UUID.randomUUID();
+        service.addExpense(new Expense(id, "coffee", new BigDecimal("5.50"),Category.FOOD, LocalDate.now()));
+
+        boolean removed = service.removeExpense(id);
+
+        assertTrue(removed);
+        assertTrue(service.getAllExpenses().isEmpty());
+        assertEquals(BigDecimal.ZERO, service.totalAmount());
+    }
+
+    @Test
+    void returnFalseWhenRemovingMissingExpense(){
+        ExpenseService service = new ExpenseService();
+
+        assertFalse(service.removeExpense((UUID.randomUUID())));
+    }
 }
