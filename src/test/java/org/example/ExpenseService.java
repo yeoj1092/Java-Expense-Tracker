@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.List;
 import java.util.UUID;
 
@@ -71,45 +72,35 @@ class ExpenseServiceTest {
     }
 
     @Test
-    void updateAmountForExistingExpense(){
+    void findsExpenseWithinInclusiveDataRange(){
         ExpenseService service = new ExpenseService();
         UUID id = UUID.randomUUID();
-        service.addExpense(new Expense(id, "coffee", new BigDecimal("5.50"), Category.FOOD, LocalDate.now()));
+        service.addExpense(new Expense(UUID.randomUUID(),"Early", new BigDecimal("4.00"),Category.FOOD, LocalDate.of(2026, 10, 31)));
+        service.addExpense(new Expense(id, "Coffee", new BigDecimal("5.50"),Category.FOOD, LocalDate.of(2026,11,10)));
+        service.addExpense(new Expense(UUID.randomUUID(),"Late", new BigDecimal("8.00"),Category.FOOD, LocalDate.of(2026, 11, 20)));
 
-        boolean updated = service.updateAmount(id, new BigDecimal("6.25"));
+        List<Expense> results = service.findByDateRange(LocalDate.of(2026,11,1),LocalDate.of(2026,11,10));
 
-        assertTrue(updated);
-        assertEquals(new BigDecimal("6.25"), service.getAllExpenses().getFirst().amount());
-        assertEquals(new BigDecimal("6.25"), service.totalAmount());
-
+        assertEquals(1, results.size());
+        assertEquals(id, results.getFirst().id());
     }
 
     @Test
-    void returnFalseWhenUpdatingMissingExpense(){
+    void rejectsEndDateBeforeStartDate(){
         ExpenseService service = new ExpenseService();
 
-        boolean updated = service.updateAmount(UUID.randomUUID(), new BigDecimal("6.25"));
-
-        assertFalse(updated);
+        assertThrows(IllegalArgumentException.class, () ->
+                service.findByDateRange(LocalDate.of(2026, 11,15), LocalDate.of(2026, 11,10)));
     }
 
     @Test
-    void removeExistingExpenseById(){
+    void calculateTotalByMonth(){
         ExpenseService service = new ExpenseService();
-        UUID id = UUID.randomUUID();
-        service.addExpense(new Expense(id, "coffee", new BigDecimal("5.50"),Category.FOOD, LocalDate.now()));
+        service.addExpense((new Expense(UUID.randomUUID(), "Coffee", new BigDecimal("5.50"), Category.FOOD,LocalDate.of(2026,11,5))));
+        service.addExpense((new Expense(UUID.randomUUID(), "Lunch", new BigDecimal("14.50"), Category.FOOD,LocalDate.of(2026,11,10))));
+        service.addExpense((new Expense(UUID.randomUUID(), "Oat Snack", new BigDecimal("9.00"), Category.FOOD,LocalDate.of(2026,10,25))));
 
-        boolean removed = service.removeExpense(id);
-
-        assertTrue(removed);
-        assertTrue(service.getAllExpenses().isEmpty());
-        assertEquals(BigDecimal.ZERO, service.totalAmount());
-    }
-
-    @Test
-    void returnFalseWhenRemovingMissingExpense(){
-        ExpenseService service = new ExpenseService();
-
-        assertFalse(service.removeExpense((UUID.randomUUID())));
+        assertEquals(new BigDecimal("20.00"), service.totalByMonth(YearMonth.of(2026,11)));
+        assertEquals(BigDecimal.ZERO, service.totalByMonth(YearMonth.of(2026,12)));
     }
 }
