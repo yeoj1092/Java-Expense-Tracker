@@ -1,6 +1,8 @@
 package org.example;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.*;
 import java.util.UUID;
 
@@ -85,5 +87,24 @@ public class ExpenseService {
     public boolean removeExpense(UUID id){
         Objects.requireNonNull(id, "id cannot be null");
         return expenses.removeIf(expense -> expense.id().equals(id));
+    }
+
+    public List<Expense> findByDateRange(LocalDate start, LocalDate end){
+        Objects.requireNonNull(start, "start cannot be null");
+        Objects.requireNonNull(end, "end cannot be null");
+        if (end.isBefore(start)){
+            throw new IllegalArgumentException("end date cannot be before start date");
+        }
+        return expenses.stream()
+                .filter(expense -> !expense.date().isBefore(start) && !expense.date().isAfter(end))
+                .toList();
+    }
+
+    public BigDecimal totalByMonth(YearMonth month){
+        Objects.requireNonNull(month, "month cannot be null");
+        return expenses.stream()
+                .filter(expense -> YearMonth.from(expense.date()).equals(month))
+                .map(Expense::amount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 }
